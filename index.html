@@ -305,7 +305,15 @@
     }));
   }
 
+  
+  document.getElementById("commandInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      handleCommand();
+    }
+  });
+
   function resetGame() {
+
     localStorage.removeItem("codepet");
     location.reload();
   }
