@@ -270,7 +270,13 @@
     logBox.scrollTop = logBox.scrollHeight;
   }
 
+  
   function handleCommand() {
+    if (!selectedAnimal) {
+      log("Sélectionne d'abord un animal avant de taper une commande.");
+      return;
+    }
+
     const input = document.getElementById("commandInput");
     const value = input.value.trim();
     const [cmd, ...args] = value.split(" ");
