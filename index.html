@@ -180,7 +180,7 @@
     <img src="https://via.placeholder.com/200x140?text=???+Mystère" alt="Mystère">
     <h3>???</h3>
     <p>Débloque-le en nourrissant ton animal 5 fois !</p>
-    <button id="mysteryBtn" onclick="selectAnimal('renard')" disabled>Bloqué</button>
+    <button id="mysteryBtn" onclick="selectAnimal('serpent')" disabled>Bloqué</button>
   </div>
 </div>
 
@@ -239,9 +239,25 @@
   };
 
   function selectAnimal(animal) {
+    
     selectedAnimal = animal;
-    hunger = cleanliness = mood = 5;
-    feedCount = 0;
+    const saved = localStorage.getItem("codepet");
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.animal === animal) {
+        hunger = data.hunger;
+        cleanliness = data.cleanliness;
+        mood = data.mood;
+        feedCount = data.feedCount;
+      } else {
+        hunger = cleanliness = mood = 5;
+        feedCount = 0;
+      }
+    } else {
+      hunger = cleanliness = mood = 5;
+      feedCount = 0;
+    }
+
     saveState();
     showGame();
     updateStats();
