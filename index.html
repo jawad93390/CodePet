@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -54,9 +55,7 @@
       cursor: pointer;
     }
 
-    .card button:disabled {
-      background-color: #aaa;
-    }
+    .card button:disabled { background-color: #aaa; }
 
     .game {
       display: flex;
@@ -130,8 +129,7 @@
       border-collapse: collapse;
     }
 
-    .commands-table th,
-    .commands-table td {
+    .commands-table th, .commands-table td {
       padding: 0.5rem;
       border-bottom: 1px solid #ddd;
       text-align: left;
@@ -153,13 +151,165 @@
   </style>
 </head>
 <body>
+
 <header>
   <h1>CodePet</h1>
   <p>Apprends à coder en prenant soin de ton animal !</p>
 </header>
-<!-- Reste du HTML (pages, scripts, etc.) inséré directement par l'utilisateur -->
+
+<div id="homePage" class="container">
+  <div class="card">
+    <img src="https://via.placeholder.com/200x140?text=Chien" alt="Chien">
+    <h3>Chien</h3>
+    <p>Fidèle et joueur.</p>
+    <button onclick="selectAnimal('chien')">Choisir</button>
+  </div>
+  <div class="card">
+    <img src="https://via.placeholder.com/200x140?text=Chat" alt="Chat">
+    <h3>Chat</h3>
+    <p>Curieux et affectueux.</p>
+    <button onclick="selectAnimal('chat')">Choisir</button>
+  </div>
+  <div class="card">
+    <img src="https://via.placeholder.com/200x140?text=Lapin" alt="Lapin">
+    <h3>Lapin</h3>
+    <p>Calme et mignon.</p>
+    <button onclick="selectAnimal('lapin')">Choisir</button>
+  </div>
+  <div class="card">
+    <img src="https://via.placeholder.com/200x140?text=???+Mystère" alt="Mystère">
+    <h3>???</h3>
+    <p>Débloque-le en nourrissant ton animal 5 fois !</p>
+    <button id="mysteryBtn" onclick="selectAnimal('renard')" disabled>Bloqué</button>
+  </div>
+</div>
+
+<div id="gamePage" class="game hidden">
+  <h2 id="animalTitle"></h2>
+  <img id="petImage" src="" width="200" style="border-radius:10px;">
+  <div class="stats">
+    <div class="stat">Faim : <span id="hunger">5</span>/10</div>
+    <div class="stat">Propreté : <span id="cleanliness">5</span>/10</div>
+    <div class="stat">Humeur : <span id="mood">5</span>/10</div>
+  </div>
+  <div class="console">
+    <input type="text" id="commandInput" placeholder="Ex: feed croquettes, clean, play">
+    <button onclick="handleCommand()">Valider</button>
+  </div>
+  <div class="log" id="logBox">Console prête.</div>
+  <div class="commands-table">
+    <h3>Commandes disponibles</h3>
+    <table>
+      <tr><th>Commande</th><th>Effet</th></tr>
+      <tr><td><code>feed croquettes</code></td><td>Améliore la faim et l’humeur</td></tr>
+      <tr><td><code>clean</code></td><td>Améliore la propreté</td></tr>
+      <tr><td><code>play</code></td><td>Améliore l’humeur, baisse faim/propreté</td></tr>
+    </table>
+  </div>
+  <button id="resetBtn" onclick="resetGame()">Réinitialiser le jeu</button>
+</div>
+
 <script>
-// Le script JS est complet dans la version initiale
+  let hunger = 5, cleanliness = 5, mood = 5, feedCount = 0;
+  let selectedAnimal = null;
+  const animalImages = {
+    chien: "https://via.placeholder.com/200x200?text=Chien",
+    chat: "https://via.placeholder.com/200x200?text=Chat",
+    lapin: "https://via.placeholder.com/200x200?text=Lapin",
+    renard: "https://via.placeholder.com/200x200?text=Renard"
+  };
+
+  window.onload = () => {
+    const saved = localStorage.getItem("codepet");
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.animal) {
+        hunger = data.hunger;
+        cleanliness = data.cleanliness;
+        mood = data.mood;
+        feedCount = data.feedCount;
+        selectedAnimal = data.animal;
+        showGame();
+        updateStats();
+      }
+      if (data.feedCount >= 5) {
+        document.getElementById("mysteryBtn").disabled = false;
+      }
+    }
+  };
+
+  function selectAnimal(animal) {
+    selectedAnimal = animal;
+    hunger = cleanliness = mood = 5;
+    feedCount = 0;
+    saveState();
+    showGame();
+    updateStats();
+  }
+
+  function showGame() {
+    document.getElementById("homePage").classList.add("hidden");
+    document.getElementById("gamePage").classList.remove("hidden");
+    document.getElementById("animalTitle").textContent = `Ton ${selectedAnimal}`;
+    document.getElementById("petImage").src = animalImages[selectedAnimal];
+  }
+
+  function updateStats() {
+    document.getElementById("hunger").textContent = hunger;
+    document.getElementById("cleanliness").textContent = cleanliness;
+    document.getElementById("mood").textContent = mood;
+    if (feedCount >= 5) {
+      document.getElementById("mysteryBtn").disabled = false;
+    }
+    saveState();
+  }
+
+  function log(text) {
+    const logBox = document.getElementById("logBox");
+    logBox.innerHTML += `<div>> ${text}</div>`;
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function handleCommand() {
+    const input = document.getElementById("commandInput");
+    const value = input.value.trim();
+    const [cmd, ...args] = value.split(" ");
+    if (cmd === "feed") {
+      const food = args.join(" ") || "quelque chose";
+      hunger = Math.min(10, hunger + 2);
+      mood = Math.min(10, mood + 1);
+      feedCount++;
+      log(`Tu as nourri ton animal avec ${food}.`);
+    } else if (cmd === "clean") {
+      cleanliness = Math.min(10, cleanliness + 3);
+      log("Tu as lavé ton animal.");
+    } else if (cmd === "play") {
+      mood = Math.min(10, mood + 2);
+      hunger = Math.max(0, hunger - 1);
+      cleanliness = Math.max(0, cleanliness - 1);
+      log("Tu as joué avec ton animal.");
+    } else {
+      log("Commande inconnue.");
+    }
+    updateStats();
+    input.value = "";
+  }
+
+  function saveState() {
+    localStorage.setItem("codepet", JSON.stringify({
+      animal: selectedAnimal,
+      hunger,
+      cleanliness,
+      mood,
+      feedCount
+    }));
+  }
+
+  function resetGame() {
+    localStorage.removeItem("codepet");
+    location.reload();
+  }
 </script>
+
 </body>
 </html>
